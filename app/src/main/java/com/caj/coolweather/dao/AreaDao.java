@@ -13,9 +13,9 @@ import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Set;
 
-public class FileDao {
-    private static FileDao INSTANCE = null;
-    private FileDao() {
+public class AreaDao {
+    private static AreaDao INSTANCE = null;
+    private AreaDao() {
 
     }
 
@@ -24,20 +24,20 @@ public class FileDao {
         void onFail(Exception e);
     }
 
-    public static FileDao getInstance() {
+    public static AreaDao getInstance() {
         if (INSTANCE == null) {
-            synchronized (FileDao.class) {
-                INSTANCE = new FileDao();
+            synchronized (AreaDao.class) {
+                INSTANCE = new AreaDao();
             }
         }
         return INSTANCE;
     }
 
     /**
-     * 从文件获取省数据
+     * 获取省数据
      * @param callBack
      */
-    public void getProvincesFromFile(CallBack callBack) {
+    public void getProvinces(CallBack callBack) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -48,11 +48,11 @@ public class FileDao {
                 try {
 
                     in = CoolWeatherApplication.getInstance().getResources()
-                            .openRawResource(R.raw.code_data);
+                            .openRawResource(R.raw.area_data);
                     reader = new BufferedReader(new InputStreamReader(in));
-                    String line = null;
-                    do {
-                        line = reader.readLine();
+                    String line = reader.readLine();
+                    while (line != null) {
+
                         // 下标0是code，下标1是镇名，下标2是市名，下标3是省名
                         String[] params = line.split(",");
                         // 如果不是保存过的省名
@@ -68,12 +68,12 @@ public class FileDao {
                             // 记录已经保存过的省名
                             savedProvinceSet.add(params[3]);
                         }
-                    } while (line != null);
+                        line = reader.readLine();
+                    }
                     if (callBack != null) {
                         callBack.onSuccess(provinces.toString());
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     if (callBack != null) {
                         callBack.onFail(e);
                     }
@@ -98,11 +98,11 @@ public class FileDao {
     }
 
     /**
-     * 从文件获取市数据
+     * 获取市数据
      * @param provinceName
      * @param callBack
      */
-    public void getCitiesFromFile(String provinceName, CallBack callBack) {
+    public void getCities(String provinceName, CallBack callBack) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -112,16 +112,16 @@ public class FileDao {
                 BufferedReader reader = null;
                 try {
                     in = CoolWeatherApplication.getInstance().getResources()
-                            .openRawResource(R.raw.code_data);
+                            .openRawResource(R.raw.area_data);
                     reader = new BufferedReader(new InputStreamReader(in));
-                    String line = null;
-                    do {
-                        line = reader.readLine();
+                    String line = reader.readLine();
+                    while (line != null) {
+
                         // 下标0是code，下标1是镇名，下标2是市名，下标3是省名
                         String[] params = line.split(",");
 
                         // 如果是所在的省
-                        if (provinceName == params[3]) {
+                        if (provinceName.equals(params[3])) {
                             // 如果不是保存过的市名
                             if (!savedCitySet.contains(params[2])) {
 
@@ -137,13 +137,13 @@ public class FileDao {
                                 savedCitySet.add(params[2]);
                             }
                         }
+                        line = reader.readLine();
+                    }
 
-                    } while (line != null);
                     if (callBack != null) {
                         callBack.onSuccess(cities.toString());
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
                     if (callBack != null) {
                         callBack.onFail(e);
                     }
@@ -169,28 +169,28 @@ public class FileDao {
     }
 
     /**
-     * 从文件获取镇数据
+     * 获取镇数据
      * @param provinceName
      * @param cityName
      * @param callBack
      */
-    public void getCountriesFromFile(String provinceName, String cityName, CallBack callBack) {
+    public void getCountries(String provinceName, String cityName, CallBack callBack) {
         Set<String> savedCountrySet= new HashSet<>();
         JSONArray countries = new JSONArray();
         InputStream in = null;
         BufferedReader reader = null;
         try {
             in = CoolWeatherApplication.getInstance().getResources()
-                    .openRawResource(R.raw.code_data);
+                    .openRawResource(R.raw.area_data);
             reader = new BufferedReader(new InputStreamReader(in));
-            String line = null;
-            do {
-                line = reader.readLine();
+            String line = reader.readLine();
+            while (line != null) {
+
                 // 下标0是code，下标1是镇名，下标2是市名，下标3是省名
                 String[] params = line.split(",");
 
                 // 如果是所在的省和市
-                if (provinceName == params[3] && cityName == params[2]) {
+                if (provinceName.equals(params[3]) && cityName.equals(params[2])) {
                     // 如果不是保存过的镇名
                     if (!savedCountrySet.contains(params[1])) {
 
@@ -208,13 +208,12 @@ public class FileDao {
                         savedCountrySet.add(params[1]);
                     }
                 }
-
-            } while (line != null);
+                line = reader.readLine();
+            }
             if (callBack != null) {
                 callBack.onSuccess(countries.toString());
             }
         } catch (Exception e) {
-            e.printStackTrace();
             if (callBack != null) {
                 callBack.onFail(e);
             }
