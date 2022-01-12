@@ -34,7 +34,7 @@
     <list>
         <mapping class="com.caj.coolweather.db.Province" />
         <mapping class="com.caj.coolweather.db.City" />
-        <mapping class="com.caj.coolweather.db.Country" />
+        <mapping class="com.caj.coolweather.db.County" />
     </list>
 
     <!--
