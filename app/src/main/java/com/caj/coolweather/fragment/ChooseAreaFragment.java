@@ -1,6 +1,7 @@
 package com.caj.coolweather.fragment;
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,6 +15,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.caj.coolweather.WeatherActivity;
 import com.caj.coolweather.adapter.ChooseAreaAdapter;
 import com.caj.coolweather.databinding.ChooseAreaBinding;
 import com.caj.coolweather.db.City;
@@ -59,11 +61,6 @@ public class ChooseAreaFragment extends Fragment {
      * 所在的市
      */
     private City selectedCity;
-
-    /**
-     * 所在的县
-     */
-    private County selectedCounty;
 
     /**
      * 所有省
@@ -122,7 +119,10 @@ public class ChooseAreaFragment extends Fragment {
                     // 加载所在市的所有镇
                     queryCounties();
                 } else if (currentLevel == LEVEL_COUNTRY) { // 如果在镇
-                    selectedCounty = countyList.get(position);
+                    String weatherId = countyList.get(position).getWeatherId();
+                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                    intent.putExtra("weather_id", weatherId);
+                    startActivity(intent);
                 }
             }
         });
