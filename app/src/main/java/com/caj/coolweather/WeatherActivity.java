@@ -3,6 +3,7 @@ package com.caj.coolweather;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
@@ -20,10 +21,19 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.bumptech.glide.Glide;
 import com.caj.coolweather.gson.Forecast;
 import com.caj.coolweather.gson.Weather;
+import com.caj.coolweather.util.HFUtil;
 import com.caj.coolweather.util.HttpUtil;
 import com.caj.coolweather.util.Utility;
+import com.google.gson.JsonObject;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -102,39 +112,46 @@ public class WeatherActivity extends AppCompatActivity {
      * @param weatherId
      */
     private void requestWeather(final String weatherId) {
-        String weatherUrl = "http://guolin.tech/api/weather?cityid="
-                + weatherId + "&key=bc0418b57b2d4918819d3974ac1285d9";
-        HttpUtil.sendHttpRequest(weatherUrl, new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(WeatherActivity.this, "获取天气诈失败"
-                                , Toast.LENGTH_SHORT).show();
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
-                });
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                final String responseText = response.body().string();
-                final Weather weather = Utility.handleWeatherResponse(responseText);
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (weather != null && "ok".equals(weather.status)) {
-                            showWeatherInfo(weather);
-                        } else {
-                            Toast.makeText(WeatherActivity.this, "获取天气诈失败"
+        // 如果Token没值就用假数据的接口
+        if (TextUtils.isEmpty(CoolWeatherApplication.getInstance().getToken())) {
+            String weatherUrl = "http://guolin.tech/api/weather?cityid="
+                    + weatherId;
+            HttpUtil.sendHttpRequest(weatherUrl, new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(WeatherActivity.this, "获取天气失败"
                                     , Toast.LENGTH_SHORT).show();
                             swipeRefreshLayout.setRefreshing(false);
                         }
-                    }
-                });
-            }
-        });
+                    });
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    final String responseText = response.body().string();
+                    final Weather weather = Utility.handleWeatherResponse(responseText);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (weather != null && "ok".equals(weather.status)) {
+                                showWeatherInfo(weather);
+                            } else {
+                                Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                        , Toast.LENGTH_SHORT).show();
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                        }
+                    });
+                }
+            });
+        } else {
+            // 如果Token有值就用真数据的接口
+            requestHFWeather(weatherId);
+        }
+
     }
 
     /**
@@ -198,6 +215,274 @@ public class WeatherActivity extends AppCompatActivity {
                         Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
                     }
                 });
+            }
+        });
+    }
+
+    /**
+     * 请求
+     * @param weatherId
+     */
+    private void requestHFWeather(final String weatherId) {
+        String location = weatherId.replace("CN", "");
+        String baseUrl = CoolWeatherApplication.getInstance().getBaseUrl();
+        String weatherUrl = baseUrl + "/v7/weather/now?location="
+                + location + "&key=" + CoolWeatherApplication.getInstance().getToken();
+
+
+        HttpUtil.sendHttpRequest(weatherUrl, new Callback() {
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                , Toast.LENGTH_SHORT).show();
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                final String responseText = response.body().string();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            JSONObject hfJsonObject = new JSONObject();
+                            JSONArray hfJsonArray = new JSONArray();
+                            hfJsonArray.put(new JSONObject());
+                            hfJsonObject.put("HeWeather", hfJsonArray);
+                            JSONObject jsonObject = new JSONObject(responseText);
+                            if ("200".equals(jsonObject.getString("code"))) {
+                                JSONObject weather = hfJsonArray.getJSONObject(0);
+                                weather.put("status", "ok");
+
+                                // 填入basic信息
+                                JSONObject basic = new JSONObject();
+                                basic.put("city", getIntent().getStringExtra("city"));
+                                basic.put("id", weatherId);
+                                JSONObject update = new JSONObject();
+                                String updateTime = HFUtil.formatDateString(jsonObject
+                                        .getString("updateTime"));
+                                update.put("loc", updateTime);
+                                basic.put("update", update);
+                                weather.put("basic", basic);
+
+                                // 填入now信息
+                                JSONObject now = new JSONObject();
+                                JSONObject fromNow = jsonObject.getJSONObject("now");
+                                now.put("tmp", fromNow.getString("temp"));
+                                JSONObject cond = new JSONObject();
+                                cond.put("txt", fromNow.getString("text"));
+                                now.put("cond", cond);
+                                weather.put("now", now);
+                                requestHFWeatherAQI(location, hfJsonObject.toString());
+                            } else {
+                                Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                        , Toast.LENGTH_SHORT).show();
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                    , Toast.LENGTH_SHORT).show();
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+
+
+
+                    }
+                });
+            }
+        });
+    }
+
+    private void requestHFWeatherAQI(final String location, String json) {
+        String baseUrl = CoolWeatherApplication.getInstance().getBaseUrl();
+        String weatherUrl = baseUrl + "/v7/air/now?location="
+                + location + "&key=" + CoolWeatherApplication.getInstance().getToken();
+
+        HttpUtil.sendHttpRequest(weatherUrl, new Callback() {
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                final String responseText = response.body().string();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            JSONObject hfJsonObject = new JSONObject(json);
+                            JSONArray hfJsonArray = hfJsonObject.getJSONArray("HeWeather");
+                            JSONObject jsonObject = new JSONObject(responseText);
+                            if ("200".equals(jsonObject.getString("code"))) {
+                                JSONObject weather = hfJsonArray.getJSONObject(0);
+
+                                // 填入AQI信息
+                                JSONObject aqi = new JSONObject();
+                                JSONObject now = jsonObject.getJSONObject("now");
+                                JSONObject city = new JSONObject();
+                                city.put("aqi", now.getString("aqi"));
+                                city.put("pm25", now.getString("pm2p5"));
+                                aqi.put("city", city);
+                                weather.put("aqi", aqi);
+                                requestHFWeatherSuggestion(location, hfJsonObject.toString());
+                            } else {
+                                Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                        , Toast.LENGTH_SHORT).show();
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                    , Toast.LENGTH_SHORT).show();
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    }
+                });
+
+            }
+
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Toast.makeText(WeatherActivity.this, "获取天气失败"
+                        , Toast.LENGTH_SHORT).show();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void requestHFWeatherSuggestion(final String location, String json) {
+        String baseUrl = CoolWeatherApplication.getInstance().getBaseUrl();
+        String weatherUrl = baseUrl + "/v7/indices/1d?location="
+                + location + "&type=8,2,1"+"&key=" + CoolWeatherApplication.getInstance().getToken();
+
+        HttpUtil.sendHttpRequest(weatherUrl, new Callback() {
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                final String responseText = response.body().string();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        try {
+                            JSONObject hfJsonObject = new JSONObject(json);
+                            JSONArray hfJsonArray = hfJsonObject.getJSONArray("HeWeather");
+                            JSONObject jsonObject = new JSONObject(responseText);
+                            if ("200".equals(jsonObject.getString("code"))) {
+                                JSONObject weather = hfJsonArray.getJSONObject(0);
+
+                                // 填入Suggestion信息
+                                JSONObject suggestion = new JSONObject();
+                                // 舒适指数
+                                JSONObject fromComfort = jsonObject.getJSONArray("daily")
+                                        .getJSONObject(0);
+                                JSONObject comf = new JSONObject();
+                                comf.put("txt", fromComfort.getString("text"));
+                                suggestion.put("comf", comf);
+                                // 洗车指数
+                                JSONObject fromCarWash = jsonObject.getJSONArray("daily")
+                                        .getJSONObject(1);
+                                JSONObject cw = new JSONObject();
+                                cw.put("txt", fromCarWash.getString("text"));
+                                suggestion.put("cw", cw);
+                                weather.put("suggestion", suggestion);
+                                // 运动指数
+                                JSONObject fromSport = jsonObject.getJSONArray("daily")
+                                        .getJSONObject(2);
+                                JSONObject sport = new JSONObject();
+                                sport.put("txt", fromSport.getString("text"));
+                                suggestion.put("sport", sport);
+                                weather.put("suggestion", suggestion);
+                                requestHFWeatherForecast(location, hfJsonObject.toString());
+                            } else {
+                                Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                        , Toast.LENGTH_SHORT).show();
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                    , Toast.LENGTH_SHORT).show();
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    }
+                });
+
+            }
+
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Toast.makeText(WeatherActivity.this, "获取天气失败"
+                        , Toast.LENGTH_SHORT).show();
+                swipeRefreshLayout.setRefreshing(false);
+            }
+        });
+    }
+
+    private void requestHFWeatherForecast(final String location, String json) {
+        String baseUrl = CoolWeatherApplication.getInstance().getBaseUrl();
+        String weatherUrl = baseUrl + "/v7/weather/3d?location="
+                + location +"&key=" +  CoolWeatherApplication.getInstance().getToken();
+
+        HttpUtil.sendHttpRequest(weatherUrl, new Callback() {
+
+            @Override
+            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                final String responseText = response.body().string();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        try {
+                            JSONObject hfJsonObject = new JSONObject(json);
+                            JSONArray hfJsonArray = hfJsonObject.getJSONArray("HeWeather");
+                            JSONObject jsonObject = new JSONObject(responseText);
+                            if ("200".equals(jsonObject.getString("code"))) {
+                                JSONObject weatherSrc = hfJsonArray.getJSONObject(0);
+
+                                // 填入Forecast信息
+                                JSONArray forecasts = new JSONArray();
+                                JSONArray fromForecasts = jsonObject.getJSONArray("daily");
+                                for (int i = 0; i < fromForecasts.length(); i++) {
+                                    JSONObject forecast = new JSONObject();
+                                    JSONObject fromForecast = fromForecasts.getJSONObject(i);
+                                    forecast.put("date", fromForecast.getString("fxDate"));
+                                    JSONObject tmp = new JSONObject();
+                                    tmp.put("max", fromForecast.getString("tempMax"));
+                                    tmp.put("min", fromForecast.getString("tempMin"));
+                                    forecast.put("tmp", tmp);
+                                    JSONObject cond = new JSONObject();
+                                    cond.put("txt_d", fromForecast.get("textDay"));
+                                    forecast.put("cond", cond);
+                                    forecasts.put(forecast);
+                                }
+                                weatherSrc.put("daily_forecast", forecasts);
+                                Weather weather = Utility.handleWeatherResponse(hfJsonObject.toString());
+                                showWeatherInfo(weather);
+                            } else {
+                                Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                        , Toast.LENGTH_SHORT).show();
+                                swipeRefreshLayout.setRefreshing(false);
+                            }
+                        }catch (Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(WeatherActivity.this, "获取天气失败"
+                                    , Toast.LENGTH_SHORT).show();
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    }
+                });
+
+            }
+
+            @Override
+            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Toast.makeText(WeatherActivity.this, "获取天气失败"
+                        , Toast.LENGTH_SHORT).show();
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
     }

@@ -120,8 +120,10 @@ public class ChooseAreaFragment extends Fragment {
                     queryCounties();
                 } else if (currentLevel == LEVEL_COUNTRY) { // 如果在镇
                     String weatherId = countyList.get(position).getWeatherId();
+                    String city = countyList.get(position).getCountyName();
                     Intent intent = new Intent(getActivity(), WeatherActivity.class);
                     intent.putExtra("weather_id", weatherId);
+                    intent.putExtra("city", city);
                     startActivity(intent);
                 }
             }
