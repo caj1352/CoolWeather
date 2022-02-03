@@ -114,44 +114,11 @@ public class WeatherActivity extends AppCompatActivity {
     private void requestWeather(final String weatherId) {
         // 如果Token没值就用假数据的接口
         if (TextUtils.isEmpty(CoolWeatherApplication.getInstance().getToken())) {
-            String weatherUrl = "http://guolin.tech/api/weather?cityid="
-                    + weatherId;
-            HttpUtil.sendHttpRequest(weatherUrl, new Callback() {
-                @Override
-                public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(WeatherActivity.this, "获取天气失败"
-                                    , Toast.LENGTH_SHORT).show();
-                            swipeRefreshLayout.setRefreshing(false);
-                        }
-                    });
-                }
-
-                @Override
-                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    final String responseText = response.body().string();
-                    final Weather weather = Utility.handleWeatherResponse(responseText);
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (weather != null && "ok".equals(weather.status)) {
-                                showWeatherInfo(weather);
-                            } else {
-                                Toast.makeText(WeatherActivity.this, "获取天气失败"
-                                        , Toast.LENGTH_SHORT).show();
-                                swipeRefreshLayout.setRefreshing(false);
-                            }
-                        }
-                    });
-                }
-            });
+            Toast.makeText(this, "请在App配置授权码", Toast.LENGTH_SHORT).show();
         } else {
             // 如果Token有值就用真数据的接口
             requestHFWeather(weatherId);
         }
-
     }
 
     /**
