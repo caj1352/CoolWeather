@@ -1,8 +1,11 @@
 package com.caj.coolweather.fragment;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +18,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import com.caj.coolweather.CoolWeatherApplication;
+import com.caj.coolweather.MainActivity;
 import com.caj.coolweather.WeatherActivity;
 import com.caj.coolweather.adapter.ChooseAreaAdapter;
 import com.caj.coolweather.databinding.ChooseAreaBinding;
@@ -119,12 +124,32 @@ public class ChooseAreaFragment extends Fragment {
                     // 加载所在市的所有镇
                     queryCounties();
                 } else if (currentLevel == LEVEL_COUNTRY) { // 如果在镇
-                    String weatherId = countyList.get(position).getWeatherId();
-                    String city = countyList.get(position).getCountyName();
-                    Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                    intent.putExtra("weather_id", weatherId);
-                    intent.putExtra("city", city);
-                    startActivity(intent);
+                    // 如果Token没值就用假数据的接口
+                    if (TextUtils.isEmpty(CoolWeatherApplication.getInstance().getToken())) {
+                        Toast.makeText(getContext(), "请在App配置授权码", Toast.LENGTH_SHORT)
+                                .show();
+                    } else {
+                        String weatherId = countyList.get(position).getWeatherId();
+                        String city = countyList.get(position).getCountyName();
+                        // 保存weatherId 和 city
+                        getActivity().getSharedPreferences("data", Context.MODE_PRIVATE)
+                                .edit()
+                                .putString("weatherId", weatherId)
+                                .putString("city", city)
+                                .apply();
+                        if (getActivity() instanceof MainActivity) {
+                            Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                            intent.putExtra("weather_id", weatherId);
+                            intent.putExtra("city", city);
+                            startActivity(intent);
+                            getActivity().finish();
+                        } else if (getActivity() instanceof WeatherActivity) {
+                            WeatherActivity activity = (WeatherActivity) getActivity();
+                            activity.viewBinding.swipeRefresh.setRefreshing(true);
+                            activity.requestWeather(weatherId);
+                        }
+
+                    }
                 }
             }
         });
@@ -143,8 +168,23 @@ public class ChooseAreaFragment extends Fragment {
 
         // 刚打开界面的时候，标题是中国
         viewBinding.titleText.setText("中国");
-        // 刚打开界面的时候，RecyclerView显示的是省的列表
-        queryProvinces();
+        SharedPreferences pref = getActivity()
+                .getSharedPreferences("data", Context.MODE_PRIVATE);
+        String weatherId = pref.getString("weatherId", null);
+        String city = pref.getString("city", null);
+        // 如果曾经打开过天气预报界面
+        if (weatherId != null && getActivity() instanceof MainActivity) {
+            // 直接打开上次打开过的天气预报界面
+            Intent intent = new Intent(getActivity(), WeatherActivity.class);
+            intent.putExtra("weather_id", weatherId);
+            intent.putExtra("city", city);
+            startActivity(intent);
+            getActivity().finish();
+        } else {
+            // 刚打开界面的时候，RecyclerView显示的是省的列表
+            queryProvinces();
+        }
+
 
     }
 

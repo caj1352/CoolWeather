@@ -1,9 +1,11 @@
 package com.caj.coolweather;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
@@ -14,11 +16,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.solver.widgets.analyzer.VerticalWidgetRun;
+import androidx.core.view.GravityCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
+import com.caj.coolweather.databinding.ActivityWeatherBinding;
 import com.caj.coolweather.gson.Forecast;
 import com.caj.coolweather.gson.Weather;
 import com.caj.coolweather.util.HFUtil;
@@ -40,69 +45,29 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 public class WeatherActivity extends AppCompatActivity {
-
-    private ScrollView weatherLayout;
-
-    private TextView titleCity;
-
-    private TextView titleUpdateTime;
-
-    private TextView degreeText;
-
-    private TextView weatherInfoText;
-
-    private LinearLayout forecastLayout;
-
-    private TextView aqiText;
-
-    private TextView pm25Text;
-
-    private TextView comfortText;
-
-    private TextView carWashText;
-
-    private TextView sportText;
-
-    private ImageButton backButton;
-
-    private ImageView bingPicImg;
-
-    private SwipeRefreshLayout swipeRefreshLayout;
+    public ActivityWeatherBinding viewBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_weather);
+        viewBinding = ActivityWeatherBinding.inflate(getLayoutInflater());
+        setContentView(viewBinding.getRoot());
         // 初始化各控件
-        weatherLayout = findViewById(R.id.weather_layout);
-        titleCity = findViewById(R.id.title_city);
-        titleUpdateTime = findViewById(R.id.title_update_time);
-        degreeText = findViewById(R.id.degree_text);
-        weatherInfoText = findViewById(R.id.weather_info_text);
-        forecastLayout = findViewById(R.id.forecast_layout);
-        aqiText = findViewById(R.id.aqi_text);
-        pm25Text = findViewById(R.id.pm25_text);
-        comfortText = findViewById(R.id.comfort_text);
-        carWashText = findViewById(R.id.car_wash_text);
-        sportText = findViewById(R.id.sport_text);
         String weatherId = getIntent().getStringExtra("weather_id");
-        weatherLayout.setVisibility(View.INVISIBLE);
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh);
-        swipeRefreshLayout.setColorSchemeResources(R.color.design_default_color_primary);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+        viewBinding.weatherLayout.setVisibility(View.INVISIBLE);
+        viewBinding.swipeRefresh.setColorSchemeResources(R.color.design_default_color_primary);
+        viewBinding.swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 requestWeather(weatherId);
             }
         });
-        backButton = findViewById(R.id.back_button);
-        backButton.setOnClickListener(new View.OnClickListener() {
+        viewBinding.title.navButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                finish();
+                viewBinding.drawerLayout.openDrawer(GravityCompat.START);
             }
         });
-        bingPicImg = findViewById(R.id.bing_pic_img);
         loadBingPic();
         requestWeather(weatherId);
     }
@@ -111,7 +76,7 @@ public class WeatherActivity extends AppCompatActivity {
      * 根据天气id请求城市天气信息
      * @param weatherId
      */
-    private void requestWeather(final String weatherId) {
+    public void requestWeather(final String weatherId) {
         // 如果Token没值就用假数据的接口
         if (TextUtils.isEmpty(CoolWeatherApplication.getInstance().getToken())) {
             Toast.makeText(this, "请在App配置授权码", Toast.LENGTH_SHORT).show();
@@ -130,14 +95,14 @@ public class WeatherActivity extends AppCompatActivity {
         String updateTime = weather.basic.update.updateTime.split(" ")[1];
         String degree = weather.now.temperature + "°C";
         String weatherInfo = weather.now.more.info;
-        titleCity.setText(cityName);
-        titleUpdateTime.setText(updateTime);
-        degreeText.setText(degree);
-        weatherInfoText.setText(weatherInfo);
-        forecastLayout.removeAllViews();
+        viewBinding.title.titleCity.setText(cityName);
+        viewBinding.title.titleUpdateTime.setText(updateTime);
+        viewBinding.now.degreeText.setText(degree);
+        viewBinding.now.weatherInfoText.setText(weatherInfo);
+        viewBinding.forecast.forecastLayout.removeAllViews();
         for (Forecast forecast : weather.forecastList) {
             View view = LayoutInflater.from(this).inflate(R.layout.forecast_item
-                    , forecastLayout, false);
+                    , viewBinding.forecast.forecastLayout, false);
             TextView dateText = view.findViewById(R.id.date_text);
             TextView infoText = view.findViewById(R.id.info_text);
             TextView maxText = view.findViewById(R.id.max_text);
@@ -146,20 +111,20 @@ public class WeatherActivity extends AppCompatActivity {
             infoText.setText(forecast.more.info);
             maxText.setText(forecast.temperature.max);
             minText.setText(forecast.temperature.min);
-            forecastLayout.addView(view);
+            viewBinding.forecast.forecastLayout.addView(view);
         }
         if (weather.aqi != null) {
-            aqiText.setText(weather.aqi.city.aqi);
-            pm25Text.setText(weather.aqi.city.pm25);
+            viewBinding.aqi.aqiText.setText(weather.aqi.city.aqi);
+            viewBinding.aqi.pm25Text.setText(weather.aqi.city.pm25);
         }
         String comfort = "舒适度：" + weather.suggestion.comfort.info;
         String carWash = "洗车指数：" + weather.suggestion.carWash.info;
         String sport = "运行指数：" + weather.suggestion.sport.info;
-        comfortText.setText(comfort);
-        carWashText.setText(carWash);
-        sportText.setText(sport);
-        weatherLayout.setVisibility(View.VISIBLE);
-        swipeRefreshLayout.setRefreshing(false);
+        viewBinding.suggestion.comfortText.setText(comfort);
+        viewBinding.suggestion.carWashText.setText(carWash);
+        viewBinding.suggestion.sportText.setText(sport);
+        viewBinding.weatherLayout.setVisibility(View.VISIBLE);
+        viewBinding.swipeRefresh.setRefreshing(false);
     }
 
     /**
@@ -179,7 +144,7 @@ public class WeatherActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
+                        Glide.with(WeatherActivity.this).load(bingPic).into(viewBinding.bingPicImg);
                     }
                 });
             }
@@ -205,7 +170,7 @@ public class WeatherActivity extends AppCompatActivity {
                     public void run() {
                         Toast.makeText(WeatherActivity.this, "获取天气失败"
                                 , Toast.LENGTH_SHORT).show();
-                        swipeRefreshLayout.setRefreshing(false);
+                        viewBinding.swipeRefresh.setRefreshing(false);
                     }
                 });
             }
@@ -249,13 +214,13 @@ public class WeatherActivity extends AppCompatActivity {
                             } else {
                                 Toast.makeText(WeatherActivity.this, "获取天气失败"
                                         , Toast.LENGTH_SHORT).show();
-                                swipeRefreshLayout.setRefreshing(false);
+                                viewBinding.swipeRefresh.setRefreshing(false);
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
                             Toast.makeText(WeatherActivity.this, "获取天气失败"
                                     , Toast.LENGTH_SHORT).show();
-                            swipeRefreshLayout.setRefreshing(false);
+                            viewBinding.swipeRefresh.setRefreshing(false);
                         }
 
 
@@ -298,13 +263,13 @@ public class WeatherActivity extends AppCompatActivity {
                             } else {
                                 Toast.makeText(WeatherActivity.this, "获取天气失败"
                                         , Toast.LENGTH_SHORT).show();
-                                swipeRefreshLayout.setRefreshing(false);
+                                viewBinding.swipeRefresh.setRefreshing(false);
                             }
                         }catch (Exception e) {
                             e.printStackTrace();
                             Toast.makeText(WeatherActivity.this, "获取天气失败"
                                     , Toast.LENGTH_SHORT).show();
-                            swipeRefreshLayout.setRefreshing(false);
+                            viewBinding.swipeRefresh.setRefreshing(false);
                         }
                     }
                 });
@@ -315,7 +280,7 @@ public class WeatherActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Toast.makeText(WeatherActivity.this, "获取天气失败"
                         , Toast.LENGTH_SHORT).show();
-                swipeRefreshLayout.setRefreshing(false);
+                viewBinding.swipeRefresh.setRefreshing(false);
             }
         });
     }
@@ -367,13 +332,13 @@ public class WeatherActivity extends AppCompatActivity {
                             } else {
                                 Toast.makeText(WeatherActivity.this, "获取天气失败"
                                         , Toast.LENGTH_SHORT).show();
-                                swipeRefreshLayout.setRefreshing(false);
+                                viewBinding.swipeRefresh.setRefreshing(false);
                             }
                         }catch (Exception e) {
                             e.printStackTrace();
                             Toast.makeText(WeatherActivity.this, "获取天气失败"
                                     , Toast.LENGTH_SHORT).show();
-                            swipeRefreshLayout.setRefreshing(false);
+                            viewBinding.swipeRefresh.setRefreshing(false);
                         }
                     }
                 });
@@ -384,7 +349,7 @@ public class WeatherActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Toast.makeText(WeatherActivity.this, "获取天气失败"
                         , Toast.LENGTH_SHORT).show();
-                swipeRefreshLayout.setRefreshing(false);
+                viewBinding.swipeRefresh.setRefreshing(false);
             }
         });
     }
@@ -432,13 +397,13 @@ public class WeatherActivity extends AppCompatActivity {
                             } else {
                                 Toast.makeText(WeatherActivity.this, "获取天气失败"
                                         , Toast.LENGTH_SHORT).show();
-                                swipeRefreshLayout.setRefreshing(false);
+                                viewBinding.swipeRefresh.setRefreshing(false);
                             }
                         }catch (Exception e) {
                             e.printStackTrace();
                             Toast.makeText(WeatherActivity.this, "获取天气失败"
                                     , Toast.LENGTH_SHORT).show();
-                            swipeRefreshLayout.setRefreshing(false);
+                            viewBinding.swipeRefresh.setRefreshing(false);
                         }
                     }
                 });
@@ -449,7 +414,7 @@ public class WeatherActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 Toast.makeText(WeatherActivity.this, "获取天气失败"
                         , Toast.LENGTH_SHORT).show();
-                swipeRefreshLayout.setRefreshing(false);
+                viewBinding.swipeRefresh.setRefreshing(false);
             }
         });
     }
