@@ -3,11 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.caj.coolweather.MainActivity">
+    tools:context="com.caj1352.coolweather.MainActivity">
 
     <fragment
         android:id="@+id/choose_area_fragment"
-        android:name="com.caj.coolweather.fragment.ChooseAreaFragment"
+        android:name="com.caj1352.coolweather.fragment.ChooseAreaFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
 

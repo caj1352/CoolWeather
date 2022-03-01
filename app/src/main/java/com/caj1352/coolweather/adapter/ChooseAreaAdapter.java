@@ -1,4 +1,4 @@
-package com.caj.coolweather.adapter;
+package com.caj1352.coolweather.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.caj.coolweather.databinding.AreaItemBinding;
+import com.caj1352.coolweather.databinding.AreaItemBinding;
 
 import java.util.List;
 

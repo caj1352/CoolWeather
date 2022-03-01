@@ -1,4 +1,4 @@
-package com.caj.coolweather;
+package com.caj1352.coolweather;
 
 import android.os.Bundle;
 

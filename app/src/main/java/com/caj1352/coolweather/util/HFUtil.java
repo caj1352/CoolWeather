@@ -1,4 +1,4 @@
-package com.caj.coolweather.util;
+package com.caj1352.coolweather.util;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

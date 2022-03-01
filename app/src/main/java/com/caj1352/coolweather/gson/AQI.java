@@ -1,4 +1,4 @@
-package com.caj.coolweather.gson;
+package com.caj1352.coolweather.gson;
 
 public class AQI {
     public AQICity city;

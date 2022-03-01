@@ -4,13 +4,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import com.caj.coolweather.util.HFUtil;
+import com.caj1352.coolweather.util.HFUtil;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * Example local unit test, which will execute on the development machine (host).

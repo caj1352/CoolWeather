@@ -1,4 +1,4 @@
-package com.caj.coolweather.db;
+package com.caj1352.coolweather.db;
 
 import org.litepal.crud.LitePalSupport;
 

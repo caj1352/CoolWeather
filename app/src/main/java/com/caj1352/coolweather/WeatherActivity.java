@@ -1,44 +1,29 @@
-package com.caj.coolweather;
+package com.caj1352.coolweather;
 
-import android.content.Context;
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.solver.widgets.analyzer.VerticalWidgetRun;
 import androidx.core.view.GravityCompat;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bumptech.glide.Glide;
-import com.caj.coolweather.databinding.ActivityWeatherBinding;
-import com.caj.coolweather.gson.Forecast;
-import com.caj.coolweather.gson.Weather;
-import com.caj.coolweather.util.HFUtil;
-import com.caj.coolweather.util.HttpUtil;
-import com.caj.coolweather.util.Utility;
-import com.google.gson.JsonObject;
+import com.caj1352.coolweather.databinding.ActivityWeatherBinding;
+import com.caj1352.coolweather.gson.Forecast;
+import com.caj1352.coolweather.gson.Weather;
+import com.caj1352.coolweather.util.HFUtil;
+import com.caj1352.coolweather.util.HttpUtil;
+import com.caj1352.coolweather.util.Utility;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import okhttp3.Call;
 import okhttp3.Callback;

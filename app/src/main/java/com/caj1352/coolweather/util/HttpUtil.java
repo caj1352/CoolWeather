@@ -1,7 +1,6 @@
-package com.caj.coolweather.util;
+package com.caj1352.coolweather.util;
 
 import okhttp3.Callback;
-import okhttp3.OkHttp;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 

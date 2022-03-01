@@ -1,4 +1,4 @@
-package com.caj.coolweather.fragment;
+package com.caj1352.coolweather.fragment;
 
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -9,7 +9,6 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -18,16 +17,16 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
-import com.caj.coolweather.CoolWeatherApplication;
-import com.caj.coolweather.MainActivity;
-import com.caj.coolweather.WeatherActivity;
-import com.caj.coolweather.adapter.ChooseAreaAdapter;
-import com.caj.coolweather.databinding.ChooseAreaBinding;
-import com.caj.coolweather.db.City;
-import com.caj.coolweather.db.County;
-import com.caj.coolweather.db.Province;
-import com.caj.coolweather.util.HttpUtil;
-import com.caj.coolweather.util.Utility;
+import com.caj1352.coolweather.CoolWeatherApplication;
+import com.caj1352.coolweather.MainActivity;
+import com.caj1352.coolweather.WeatherActivity;
+import com.caj1352.coolweather.adapter.ChooseAreaAdapter;
+import com.caj1352.coolweather.databinding.ChooseAreaBinding;
+import com.caj1352.coolweather.db.City;
+import com.caj1352.coolweather.db.County;
+import com.caj1352.coolweather.db.Province;
+import com.caj1352.coolweather.util.HttpUtil;
+import com.caj1352.coolweather.util.Utility;
 
 import org.litepal.LitePal;
 

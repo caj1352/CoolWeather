@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.caj.coolweather">
+    package="com.caj1352.coolweather">
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".CoolWeatherApplication"
+        android:name="com.caj1352.coolweather.CoolWeatherApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -14,10 +14,10 @@
         android:theme="@style/Theme.MyApplication"
         android:networkSecurityConfig="@xml/network_config">
         <activity
-            android:name=".WeatherActivity"
+            android:name="com.caj1352.coolweather.WeatherActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name="com.caj1352.coolweather.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
